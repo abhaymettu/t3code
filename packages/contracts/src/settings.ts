@@ -142,6 +142,22 @@ export const GlassOpacity = Schema.Int.check(
 export type GlassOpacity = typeof GlassOpacity.Type;
 const DEFAULT_GLASS_OPACITY: GlassOpacity = 80;
 
+/** Lowercase hex SHA-256 of the stored, re-encoded image bytes. */
+export const BackgroundImageAssetId = Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)).pipe(
+  Schema.brand("BackgroundImageAssetId"),
+);
+export type BackgroundImageAssetId = typeof BackgroundImageAssetId.Type;
+export const MIN_BACKGROUND_IMAGE_FADE = 70;
+export const MAX_BACKGROUND_IMAGE_FADE = 100;
+export const BackgroundImageFade = Schema.Int.check(
+  Schema.isBetween({
+    minimum: MIN_BACKGROUND_IMAGE_FADE,
+    maximum: MAX_BACKGROUND_IMAGE_FADE,
+  }),
+);
+export type BackgroundImageFade = typeof BackgroundImageFade.Type;
+const DEFAULT_BACKGROUND_IMAGE_FADE: BackgroundImageFade = MIN_BACKGROUND_IMAGE_FADE;
+
 export const MIN_APPEARANCE_CONTRAST = 50;
 export const MAX_APPEARANCE_CONTRAST = 200;
 export const AppearanceContrast = Schema.Int.check(
@@ -429,6 +445,13 @@ export const ClientSettingsSchema = Schema.Struct({
   ),
   glassOpacity: GlassOpacity.pipe(
     Schema.withDecodingDefault(Effect.succeed(DEFAULT_GLASS_OPACITY)),
+  ),
+  backgroundImageEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
+  backgroundImageAssetId: Schema.NullOr(BackgroundImageAssetId).pipe(
+    Schema.withDecodingDefault(Effect.succeed(null)),
+  ),
+  backgroundImageFade: BackgroundImageFade.pipe(
+    Schema.withDecodingDefault(Effect.succeed(DEFAULT_BACKGROUND_IMAGE_FADE)),
   ),
   fontSizeInterface: InterfaceFontSize.pipe(
     Schema.withDecodingDefault(Effect.succeed(DEFAULT_INTERFACE_FONT_SIZE)),
@@ -1687,6 +1710,9 @@ export const ClientSettingsPatch = Schema.Struct({
   diffLayout: Schema.optionalKey(DiffLayout),
   environmentIdentificationMode: Schema.optionalKey(EnvironmentIdentificationMode),
   glassOpacity: Schema.optionalKey(GlassOpacity),
+  backgroundImageEnabled: Schema.optionalKey(Schema.Boolean),
+  backgroundImageAssetId: Schema.optionalKey(Schema.NullOr(BackgroundImageAssetId)),
+  backgroundImageFade: Schema.optionalKey(BackgroundImageFade),
   onboardingCompletedAt: Schema.optionalKey(Schema.NullOr(Schema.String)),
   fontSizeInterface: Schema.optionalKey(InterfaceFontSize),
   fontSizePrompt: Schema.optionalKey(PromptFontSize),

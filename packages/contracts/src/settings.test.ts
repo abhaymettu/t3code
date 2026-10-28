@@ -370,3 +370,47 @@ describe("server model preferences", () => {
     expect(decodeServerSettingsPatch(input)).toEqual(input);
   });
 });
+
+describe("ClientSettings background image", () => {
+  const assetId = "7acfd310".padEnd(64, "0");
+
+  it("is off with no image and the least fade by default", () => {
+    const settings = decodeClientSettings({});
+    expect([
+      settings.backgroundImageEnabled,
+      settings.backgroundImageAssetId,
+      settings.backgroundImageFade,
+    ]).toEqual([false, null, 70]);
+  });
+
+  it("round-trips through JSON", () => {
+    const settings = decodeClientSettings({
+      backgroundImageEnabled: true,
+      backgroundImageAssetId: assetId,
+      backgroundImageFade: 85,
+    });
+    const json = JSON.parse(JSON.stringify(encodeClientSettings(settings)));
+    expect(decodeClientSettings(json)).toEqual(settings);
+    expect(decodeClientSettings(json).backgroundImageAssetId).toBe(assetId);
+  });
+
+  it.each([70, 100])("accepts a fade of %i", (backgroundImageFade) => {
+    expect(decodeClientSettings({ backgroundImageFade }).backgroundImageFade).toBe(
+      backgroundImageFade,
+    );
+    expect(decodeClientSettingsPatch({ backgroundImageFade })).toEqual({ backgroundImageFade });
+  });
+
+  it("rejects a fade outside 70 to 100 and ids that are not a SHA-256", () => {
+    expect(() => decodeClientSettings({ backgroundImageFade: 69 })).toThrow();
+    expect(() => decodeClientSettings({ backgroundImageFade: 101 })).toThrow();
+    expect(() => decodeClientSettings({ backgroundImageFade: 72.5 })).toThrow();
+    expect(() => decodeClientSettings({ backgroundImageAssetId: "ABC" })).toThrow();
+  });
+
+  it("patches can clear the image", () => {
+    expect(decodeClientSettingsPatch({ backgroundImageAssetId: null })).toEqual({
+      backgroundImageAssetId: null,
+    });
+  });
+});
