@@ -304,6 +304,19 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: ["transparent transparency solid menus dialogs composer"],
   },
   {
+    id: "setting-background-image",
+    title: "Background image",
+    to: "/settings/appearance",
+    searchTerms: ["wallpaper backdrop photo picture custom"],
+  },
+  {
+    id: "setting-background-fade",
+    title: "Background fade",
+    to: "/settings/appearance",
+    searchTerms: ["background image wallpaper photo dim tint readable"],
+    targetId: "appearance-background",
+  },
+  {
     id: "diff-color-scheme",
     title: "Diff colors",
     to: "/settings/diffs",

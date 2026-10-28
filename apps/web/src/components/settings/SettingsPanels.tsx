@@ -50,6 +50,7 @@ import {
   useUpdateScopedSettings,
 } from "./useScopedSettings";
 import { useScopedModelDisabledReason } from "./useScopedModelAvailability";
+import { deleteBackgroundImage } from "../../assets/backgroundImageStore";
 import { useOptionalSettingsScope, useSettingsScope } from "./SettingsScopeContext";
 import { scopedIdleCompaction } from "./scopedSettings";
 import { ProjectDefaultsSettings } from "./ProjectDefaultsSettings";
@@ -402,6 +403,11 @@ export function useSettingsRestore(onRestored?: () => void) {
       ? ["Contrast"]
       : []),
     ...(settings.glassOpacity !== DEFAULT_UNIFIED_SETTINGS.glassOpacity ? ["Glass opacity"] : []),
+    ...(settings.backgroundImageEnabled !== DEFAULT_UNIFIED_SETTINGS.backgroundImageEnabled ||
+    settings.backgroundImageAssetId !== DEFAULT_UNIFIED_SETTINGS.backgroundImageAssetId ||
+    settings.backgroundImageFade !== DEFAULT_UNIFIED_SETTINGS.backgroundImageFade
+      ? ["Background image"]
+      : []),
     ...(settings.diffColorScheme !== DEFAULT_UNIFIED_SETTINGS.diffColorScheme
       ? ["Diff colors"]
       : []),
@@ -602,6 +608,9 @@ export function useSettingsRestore(onRestored?: () => void) {
       contextWindowMeterEnabled: DEFAULT_UNIFIED_SETTINGS.contextWindowMeterEnabled,
       environmentIdentificationMode: DEFAULT_UNIFIED_SETTINGS.environmentIdentificationMode,
       glassOpacity: DEFAULT_UNIFIED_SETTINGS.glassOpacity,
+      backgroundImageEnabled: DEFAULT_UNIFIED_SETTINGS.backgroundImageEnabled,
+      backgroundImageAssetId: DEFAULT_UNIFIED_SETTINGS.backgroundImageAssetId,
+      backgroundImageFade: DEFAULT_UNIFIED_SETTINGS.backgroundImageFade,
       panelAnimationDurationMs: DEFAULT_UNIFIED_SETTINGS.panelAnimationDurationMs,
       sidebarThreadPreviewCount: DEFAULT_UNIFIED_SETTINGS.sidebarThreadPreviewCount,
       sidebarProjectGroupingMode: DEFAULT_UNIFIED_SETTINGS.sidebarProjectGroupingMode,
@@ -650,6 +659,10 @@ export function useSettingsRestore(onRestored?: () => void) {
       pullRequestLinksOpenInApp: DEFAULT_UNIFIED_SETTINGS.pullRequestLinksOpenInApp,
       enableAgentBrowserAccess: DEFAULT_UNIFIED_SETTINGS.enableAgentBrowserAccess,
     });
+    // After the settings stop naming it, so nothing reads the image while it is deleted.
+    if (settings.backgroundImageAssetId !== null) {
+      void deleteBackgroundImage(settings.backgroundImageAssetId).catch(() => undefined);
+    }
     onRestored?.();
   };
 

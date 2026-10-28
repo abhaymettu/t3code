@@ -41,6 +41,16 @@ exporting a table preserves the TeX.
 The composer keeps TeX source editable, including when rich text is enabled. The Render math
 preference is saved separately on each device.
 
+## Background image
+
+On web and desktop, turn on **Background image** in **Settings → Appearance** and choose a JPEG,
+PNG, or WebP to show it behind the window. **Fade** sets how far the photo fades into your
+theme's background, from 70%, where text stays readable over any photo, to 100%, which leaves only
+the background. The image is stored on this device only, scaled down to at most 3840 pixels on its
+long edge. While it shows, menus, dialogs, and the composer are solid, so **Glass opacity** has no
+effect. **Remove** deletes it. The image stays hidden when your operating system asks for
+reduced transparency or more contrast.
+
 ## Motion
 
 The main sidebar, right panel, and terminal drawer open and close immediately by default. Move the

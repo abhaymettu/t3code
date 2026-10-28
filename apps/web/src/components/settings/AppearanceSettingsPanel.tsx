@@ -31,6 +31,8 @@ import {
 } from "./settingsLayout";
 import { searchableSetting } from "./settingsSearch";
 import { AdvancedSettings } from "./AdvancedSettings";
+import { shownBackgroundImageAssetId } from "../../assets/backgroundImageStore";
+import { BackgroundImageSection } from "./BackgroundImageSettings";
 import { PanelAnimationsPreview } from "./PanelAnimationsPreview";
 import { TypographySection } from "./TypographySettings";
 
@@ -99,6 +101,7 @@ export function AppearanceSettingsPanel() {
     environmentIdentificationOptionList.find(
       ([value]) => value === settings.environmentIdentificationMode,
     )?.[1] ?? ENVIRONMENT_IDENTIFICATION_LABELS[settings.environmentIdentificationMode];
+  const glassPinnedByBackgroundImage = shownBackgroundImageAssetId(settings) !== null;
   const glassOpacityRatio =
     (settings.glassOpacity - MIN_GLASS_OPACITY) / (MAX_GLASS_OPACITY - MIN_GLASS_OPACITY);
   const glassOpacitySliderStyle = {
@@ -191,7 +194,12 @@ export function AppearanceSettingsPanel() {
 
         <SettingsRow
           {...searchableSetting("setting-glass-opacity")}
-          description="Higher values make menus, dialogs, and the composer more solid."
+          aria-disabled={glassPinnedByBackgroundImage || undefined}
+          description={
+            glassPinnedByBackgroundImage
+              ? "Solid while a background image shows."
+              : "Higher values make menus, dialogs, and the composer more solid."
+          }
           resetAction={
             settings.glassOpacity !== DEFAULT_UNIFIED_SETTINGS.glassOpacity ? (
               <SettingResetButton
@@ -213,6 +221,7 @@ export function AppearanceSettingsPanel() {
               <input
                 aria-label="Glass opacity"
                 className="settings-slider min-w-0 flex-1"
+                disabled={glassPinnedByBackgroundImage}
                 id="glass-opacity"
                 max={MAX_GLASS_OPACITY}
                 min={MIN_GLASS_OPACITY}
@@ -427,6 +436,8 @@ export function AppearanceSettingsPanel() {
           />
         </AdvancedSettings>
       </SettingsSection>
+
+      <BackgroundImageSection />
 
       <TypographySection />
     </SettingsPageContainer>
