@@ -3,10 +3,12 @@ import {
   ProjectId,
   ProviderDriverKind,
   ProviderInstanceId,
+  ServerSettingsPatch,
   UsageLimitSourceId,
   type ServerProvider,
 } from "@t3tools/contracts";
 import * as Duration from "effect/Duration";
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 import { resolveServerBackgroundActivitySettings } from "./backgroundActivitySettings.ts";
 import { createModelSelection } from "./model.ts";
@@ -22,6 +24,8 @@ import {
 } from "./serverSettings.ts";
 
 const FOLDED_SERVER_SETTINGS = { ...DEFAULT_SERVER_SETTINGS, projectSettingsFolded: true };
+
+const decodeServerSettingsPatch = Schema.decodeSync(ServerSettingsPatch);
 
 describe("fallbackTextGenerationModelSelection", () => {
   it("ignores a configured non-default instance at machine scope, matching no fallback", () => {
@@ -524,6 +528,32 @@ describe("serverSettings helpers", () => {
 
     const removed = applyServerSettingsPatch(added, { usageLimitSources: { [hubA]: null } });
     expect(Object.keys(removed.usageLimitSources)).toEqual([hubB]);
+  });
+
+  it("merges plugin state key by key and removes a plugin or a value with null", () => {
+    const current = applyServerSettingsPatch(DEFAULT_SERVER_SETTINGS, {
+      plugins: {
+        "dev.example.backdrop": { enabled: true, values: { opacity: 60, sidebar: true } },
+        "dev.example.glass": { enabled: true },
+        "dev.example.quiet": { values: { level: "low" } },
+      },
+    });
+    const opacity = applyServerSettingsPatch(current, {
+      plugins: { "dev.example.backdrop": { values: { opacity: 40 } } },
+    });
+    const patched = applyServerSettingsPatch(
+      opacity,
+      decodeServerSettingsPatch({
+        plugins: {
+          "dev.example.backdrop": { enabled: false, values: { sidebar: null } },
+          "dev.example.glass": null,
+        },
+      }),
+    );
+    expect(patched.plugins).toEqual({
+      "dev.example.backdrop": { enabled: false, values: { opacity: 40 } },
+      "dev.example.quiet": { enabled: false, values: { level: "low" } },
+    });
   });
 
   it("replaces and removes individual usage prices without clobbering other models", () => {

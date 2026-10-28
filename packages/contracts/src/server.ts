@@ -27,6 +27,7 @@ import { ModelCapabilities, ProviderOptionDescriptor } from "./model.ts";
 import { RuntimeMode } from "./providerPolicy.ts";
 import { ProviderDriverKind, ProviderInstanceId } from "./providerInstance.ts";
 import { ServerProviderUsageLimits, UsageLimitSourceSnapshots } from "./providerUsageLimits.ts";
+import { EnvironmentPlugins } from "./plugins.ts";
 import { ServerSettings } from "./settings.ts";
 
 const KeybindingsMalformedConfigIssue = Schema.Struct({
@@ -651,6 +652,8 @@ export const ServerConfig = Schema.Struct({
    * subscriber the same array twice per connect.
    */
   environmentThemes: Schema.optional(Schema.Array(EnvironmentTheme)),
+  /** Stream-only and opt-in, like `environmentThemes`. */
+  environmentPlugins: Schema.optional(EnvironmentPlugins),
   /** Stream-only and opt-in; the source stream emits the current set on subscribe. */
   usageLimitSources: Schema.optional(UsageLimitSourceSnapshots),
 });
@@ -760,6 +763,14 @@ export const ServerConfigStreamEnvironmentThemesUpdatedEvent = Schema.Struct({
 export type ServerConfigStreamEnvironmentThemesUpdatedEvent =
   typeof ServerConfigStreamEnvironmentThemesUpdatedEvent.Type;
 
+export const ServerConfigStreamEnvironmentPluginsUpdatedEvent = Schema.Struct({
+  version: Schema.Literal(1),
+  type: Schema.Literal("environmentPluginsUpdated"),
+  payload: EnvironmentPlugins,
+});
+export type ServerConfigStreamEnvironmentPluginsUpdatedEvent =
+  typeof ServerConfigStreamEnvironmentPluginsUpdatedEvent.Type;
+
 export const ServerConfigUsageLimitSourcesUpdatedPayload = Schema.Struct({
   sources: UsageLimitSourceSnapshots,
 });
@@ -780,6 +791,7 @@ export const ServerConfigStreamEvent = Schema.Union([
   ServerConfigStreamProviderStatusesEvent,
   ServerConfigStreamSettingsUpdatedEvent,
   ServerConfigStreamEnvironmentThemesUpdatedEvent,
+  ServerConfigStreamEnvironmentPluginsUpdatedEvent,
   ServerConfigStreamUsageLimitSourcesUpdatedEvent,
 ]);
 export type ServerConfigStreamEvent = typeof ServerConfigStreamEvent.Type;

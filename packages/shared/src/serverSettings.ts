@@ -12,6 +12,8 @@ import {
   resolveProviderInstanceEnabled,
   isProviderTextGenerationCapable,
   type ModelSelection,
+  type PluginState,
+  type PluginStatePatch,
   type ProjectId,
   type ProjectScopedServerSettingKey,
   type ProjectSettingsOverrides,
@@ -224,6 +226,28 @@ function mergeSettingsEntries<Value>(
   return Object.fromEntries(next);
 }
 
+function mergePluginStates(
+  current: Readonly<Record<string, PluginState>>,
+  patch: Readonly<Record<string, PluginStatePatch | null>>,
+): Record<string, PluginState> {
+  return mergeSettingsEntries(
+    current,
+    Object.fromEntries(
+      Object.entries(patch).map(([id, entry]) => {
+        if (entry === null) return [id, null];
+        const previous = current[id];
+        return [
+          id,
+          {
+            enabled: entry.enabled ?? previous?.enabled ?? false,
+            values: mergeSettingsEntries(previous?.values ?? {}, entry.values ?? {}),
+          },
+        ];
+      }),
+    ),
+  );
+}
+
 // Older clients omit providerInstances during whole-entry replacement; preserve it to avoid wiping overrides.
 function mergeProjectSettingsOverridesPatch(
   current: Readonly<Record<string, ProjectSettingsOverrides>>,
@@ -358,6 +382,7 @@ export function applyServerSettingsPatch(
     sourceControlHosts: sourceControlHostsPatch,
     usagePriceOverrides: usagePriceOverridesPatch,
     usageModelAliases: usageModelAliasesPatch,
+    plugins: pluginsPatch,
     // Entry replacement: deepMerge would keep keys the client meant to clear.
     projectSettingsOverrides: projectSettingsOverridesPatch,
     projectAgentBrowserAccessOverrides: _legacyBrowserAccess,
@@ -564,6 +589,9 @@ export function applyServerSettingsPatch(
             usageModelAliasesPatch,
           ),
         }
+      : {}),
+    ...(pluginsPatch !== undefined
+      ? { plugins: mergePluginStates(current.plugins, pluginsPatch) }
       : {}),
     ...(patch.sourceControlWriterModelSelection !== undefined
       ? { sourceControlWriterModelSelection: patch.sourceControlWriterModelSelection }

@@ -47,6 +47,7 @@ import {
   ProviderInstanceId,
   ProviderDriverKind,
 } from "./providerInstance.ts";
+import { PluginId, PluginState, PluginStatePatch } from "./plugins.ts";
 import { PullRequestMergeMethod } from "./pullRequest.ts";
 
 export const TimestampFormat = Schema.Literals(["locale", "12-hour", "24-hour"]);
@@ -1314,6 +1315,11 @@ export const ServerSettings = Schema.Struct({
   usageModelAliases: Schema.Record(TrimmedNonEmptyString, TrimmedNonEmptyString).pipe(
     Schema.withDecodingDefault(Effect.succeed({})),
   ),
+
+  /** Plugins live in the environment's folder, so turning one on follows the environment. */
+  plugins: Schema.Record(PluginId, PluginState).pipe(
+    Schema.withDecodingDefault(Effect.succeed({})),
+  ),
 });
 export type ServerSettings = typeof ServerSettings.Type;
 
@@ -1622,6 +1628,8 @@ export const ServerSettingsPatch = Schema.Struct({
   usageModelAliases: Schema.optionalKey(
     Schema.Record(TrimmedNonEmptyString, Schema.NullOr(TrimmedNonEmptyString)),
   ),
+
+  plugins: Schema.optionalKey(Schema.Record(PluginId, Schema.NullOr(PluginStatePatch))),
 });
 export type ServerSettingsPatch = typeof ServerSettingsPatch.Type;
 
