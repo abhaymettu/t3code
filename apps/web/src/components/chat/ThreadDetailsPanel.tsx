@@ -110,7 +110,7 @@ export function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
       {(density) => (
         <>
           <ThreadDetailsSection
-            headingId="thread-details-workspace-heading"
+            section="workspace"
             title="Workspace"
             separated={false}
             showHeading={false}
@@ -159,7 +159,7 @@ export function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
 
           {props.gitCwd ? (
             <ThreadDetailsSection
-              headingId="thread-details-version-control-heading"
+              section="version-control"
               title="Version Control"
               showHeading={false}
               separated={density === "full"}

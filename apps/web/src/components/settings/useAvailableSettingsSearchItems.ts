@@ -1,3 +1,4 @@
+import { useAtomValue } from "@effect/atom-react";
 import { AuthEnvironmentMaintainScope } from "@t3tools/contracts";
 
 import { usePrimaryCloudLinkState } from "~/cloud/primaryCloudLinkState";
@@ -8,6 +9,7 @@ import { desktopWslStateAtom } from "~/state/desktopWslState";
 import { useEnvironments, usePrimaryEnvironmentId } from "~/state/environments";
 import { usePeerLinkHosts } from "~/state/peerLinks";
 import { useEnvironmentQuery } from "~/state/query";
+import { primaryServerEnvironmentPluginsAtom } from "~/state/server";
 import { useEnvironmentScope } from "~/state/session";
 import { isWslSettingsRowVisible } from "./ConnectionsSettings.logic";
 import { isProviderSettingsEnvironmentAvailable } from "./ProviderSettingsPanel.logic";
@@ -15,6 +17,7 @@ import type { SettingsScopeSearch } from "./settingsScope";
 import {
   filterAvailableSettingsSearchItems,
   getThreadAutoSettlementSearchAvailability,
+  pluginSearchItems,
 } from "./settingsSearch";
 
 export function useAvailableSettingsSearchItems(scopeSearch: SettingsScopeSearch = {}) {
@@ -57,8 +60,9 @@ export function useAvailableSettingsSearchItems(scopeSearch: SettingsScopeSearch
   const cloudPublicConfig = hasCloudPublicConfig() === true;
   const wslSettingsRowVisible =
     isWslSettingsRowVisible({ state: desktopWsl.data, error: desktopWsl.error }) === true;
+  const { plugins } = useAtomValue(primaryServerEnvironmentPluginsAtom);
 
-  return filterAvailableSettingsSearchItems({
+  const staticItems = filterAvailableSettingsSearchItems({
     localEnvironmentDisabled,
     hasCloudPublicConfig: cloudPublicConfig,
     hasEnvironment,
@@ -70,4 +74,5 @@ export function useAvailableSettingsSearchItems(scopeSearch: SettingsScopeSearch
     managedTunnelActive,
     hasPeerLinkHost,
   });
+  return [...staticItems, ...pluginSearchItems(plugins)];
 }

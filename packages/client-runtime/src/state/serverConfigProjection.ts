@@ -8,14 +8,23 @@ export interface ServerConfigProjection {
 }
 
 /**
- * Published themes and usage-limit sources are current machine state, so a
+ * Published themes, plugins, and usage-limit sources are current machine state, so a
  * cache could restore a set the machine no longer reports.
  */
-export function withoutEnvironmentThemes(config: ServerConfig): ServerConfig {
-  if (config.environmentThemes === undefined && config.usageLimitSources === undefined) {
+export function withoutMachineState(config: ServerConfig): ServerConfig {
+  if (
+    config.environmentThemes === undefined &&
+    config.environmentPlugins === undefined &&
+    config.usageLimitSources === undefined
+  ) {
     return config;
   }
-  const { environmentThemes: _themes, usageLimitSources: _sources, ...rest } = config;
+  const {
+    environmentThemes: _themes,
+    environmentPlugins: _plugins,
+    usageLimitSources: _sources,
+    ...rest
+  } = config;
   return rest;
 }
 
@@ -64,10 +73,13 @@ export function applyServerConfigProjection(
 ): Option.Option<ServerConfigProjection> {
   switch (event.type) {
     case "snapshot": {
-      // Wire snapshots never contain published themes. Keep the previous set
-      // until the server sends its authoritative theme event.
+      // Wire snapshots never contain published themes or plugins. Keep the previous
+      // sets until the server sends its authoritative events.
       const carriedThemes = Option.isSome(current)
         ? current.value.config.environmentThemes
+        : undefined;
+      const carriedPlugins = Option.isSome(current)
+        ? current.value.config.environmentPlugins
         : undefined;
       const carriedSources = Option.isSome(current)
         ? current.value.config.usageLimitSources
@@ -75,6 +87,7 @@ export function applyServerConfigProjection(
       const config: ServerConfig = {
         ...event.config,
         ...(carriedThemes === undefined ? {} : { environmentThemes: carriedThemes }),
+        ...(carriedPlugins === undefined ? {} : { environmentPlugins: carriedPlugins }),
         ...(carriedSources === undefined ? {} : { usageLimitSources: carriedSources }),
       };
       return Option.some({
@@ -117,6 +130,15 @@ export function applyServerConfigProjection(
         config: {
           ...projection.config,
           environmentThemes: event.payload.themes.length > 0 ? event.payload.themes : undefined,
+        },
+        latestEvent: event,
+        source: "live",
+      }));
+    case "environmentPluginsUpdated":
+      return Option.map(current, (projection) => ({
+        config: {
+          ...projection.config,
+          environmentPlugins: reuseUnchanged(projection.config.environmentPlugins, event.payload),
         },
         latestEvent: event,
         source: "live",

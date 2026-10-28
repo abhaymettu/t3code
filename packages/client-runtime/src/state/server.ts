@@ -57,7 +57,7 @@ import {
   applyServerConfigProjection,
   reuseUnchanged,
   type ServerConfigProjection,
-  withoutEnvironmentThemes,
+  withoutMachineState,
 } from "./serverConfigProjection.ts";
 
 export type { ServerConfigProjection } from "./serverConfigProjection.ts";
@@ -359,6 +359,7 @@ const cachedConfigSnapshotEvent = (config: ServerConfig): ServerConfigStreamEven
 
 export interface ServerConfigSubscriptionOptions {
   readonly environmentThemes?: boolean;
+  readonly environmentPlugins?: boolean;
   readonly usageLimitSources?: boolean;
   readonly usageLimitsCommand?: boolean;
 }
@@ -416,8 +417,8 @@ export const makeEnvironmentServerConfigState = Effect.fn("EnvironmentServerConf
     );
     const state = yield* SubscriptionRef.make<Option.Option<ServerConfigProjection>>(
       Option.map(cachedConfig, (cached) => ({
-        config: withoutEnvironmentThemes(cached),
-        latestEvent: cachedConfigSnapshotEvent(withoutEnvironmentThemes(cached)),
+        config: withoutMachineState(cached),
+        latestEvent: cachedConfigSnapshotEvent(withoutMachineState(cached)),
         source: "cache" as const,
       })),
     );
@@ -431,6 +432,7 @@ export const makeEnvironmentServerConfigState = Effect.fn("EnvironmentServerConf
       // A cached stall would read as a fresh freeze on the next launch.
       const {
         environmentThemes: _themes,
+        environmentPlugins: _plugins,
         usageLimitSources: _sources,
         lastEventLoopStall: _stall,
         ...cacheable
@@ -480,6 +482,7 @@ export const makeEnvironmentServerConfigState = Effect.fn("EnvironmentServerConf
 
     yield* subscribe(WS_METHODS.subscribeServerConfig, {
       ...(subscription.environmentThemes === true ? { environmentThemes: true } : {}),
+      ...(subscription.environmentPlugins === true ? { environmentPlugins: true } : {}),
       ...(subscription.usageLimitSources === true ? { usageLimitSources: true } : {}),
       ...(subscription.usageLimitsCommand === true ? { usageLimitsCommand: true } : {}),
     }).pipe(
@@ -749,6 +752,7 @@ export function createServerEnvironmentAtoms<R, E>(
       environmentId: EnvironmentId,
     ) => Atom.Atom<ServerConfig | null>;
     readonly environmentThemes?: boolean;
+    readonly environmentPlugins?: boolean;
     readonly usageLimitSources?: boolean;
     readonly usageLimitsCommand?: boolean;
   },
@@ -764,6 +768,7 @@ export function createServerEnvironmentAtoms<R, E>(
       .atom(
         serverConfigStateChanges(environmentId, {
           ...(options.environmentThemes === true ? { environmentThemes: true } : {}),
+          ...(options.environmentPlugins === true ? { environmentPlugins: true } : {}),
           ...(options.usageLimitSources === true ? { usageLimitSources: true } : {}),
           ...(options.usageLimitsCommand === true ? { usageLimitsCommand: true } : {}),
         }),

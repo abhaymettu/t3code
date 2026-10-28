@@ -49,8 +49,9 @@ export const SETTINGS_DEVICE_ONLY_PATHS: ReadonlySet<string> = new Set([
   "/settings/diffs",
   "/settings/snap-shot",
   "/settings/connections",
-  // Network access and authorized clients belong to the environment serving this app.
+  // Network access, authorized clients, and plugins belong to the environment serving this app.
   "/settings/access",
+  "/settings/plugins",
   "/settings/about",
 ]);
 

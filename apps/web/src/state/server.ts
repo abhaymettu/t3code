@@ -1,7 +1,9 @@
 import {
   DEFAULT_SERVER_SETTINGS,
+  EMPTY_ENVIRONMENT_PLUGINS,
   type EditorId,
   type EnvironmentId,
+  type EnvironmentPlugins,
   type EnvironmentTheme,
   type ServerConfig,
   type ServerConfigStreamEvent,
@@ -30,10 +32,11 @@ import { primaryEnvironmentIdAtom } from "./primaryEnvironment";
 import { environmentSession } from "./session";
 import { reuseProvidersIgnoringCheckedAt } from "./serverProviders.logic";
 
-// Subscribe to every environment's themes; primary can change without reconnecting or updating the subscription.
+// Subscribe to every environment's themes and plugins; primary can change without reconnecting or updating the subscription.
 export const serverEnvironment = createServerEnvironmentAtoms(connectionAtomRuntime, {
   initialConfigValueAtom: environmentSession.initialConfigValueAtom,
   environmentThemes: true,
+  environmentPlugins: true,
   usageLimitSources: true,
   usageLimitsCommand: true,
 });
@@ -175,6 +178,11 @@ export const primaryServerEnvironmentThemesAtom = Atom.make(
   (get): ReadonlyArray<EnvironmentTheme> =>
     get(primaryServerConfigAtom)?.environmentThemes ?? EMPTY_ENVIRONMENT_THEMES,
 ).pipe(Atom.withLabel("web-primary-server-environment-themes"));
+
+export const primaryServerEnvironmentPluginsAtom = Atom.make(
+  (get): EnvironmentPlugins =>
+    get(primaryServerConfigAtom)?.environmentPlugins ?? EMPTY_ENVIRONMENT_PLUGINS,
+).pipe(Atom.withLabel("web-primary-server-environment-plugins"));
 
 export const providersIgnoringCheckedAtAtom = Atom.family((environmentId: EnvironmentId) =>
   Atom.make((get): ReadonlyArray<ServerProvider> =>

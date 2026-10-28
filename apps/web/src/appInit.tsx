@@ -1,6 +1,7 @@
 import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environment";
 import type { ClientSettings } from "@t3tools/contracts/settings";
 import { createBrowserHistory, createHashHistory } from "@tanstack/react-router";
+import { Atom } from "effect/reactivity";
 
 import { applyAppearanceContrast } from "./appearanceContrast";
 import { applyAppearanceFontVariables } from "./appearanceFonts";
@@ -45,7 +46,12 @@ import {
 import { startProviderAuthDelivery } from "./providerAuthDelivery";
 import { getRouter, type AppRouter } from "./router";
 import { appAtomRegistry } from "./rpc/atomRegistry";
-import { primaryServerConfigAtom } from "./state/server";
+import { applyPluginDocumentStyles, resolvePluginDocumentStyles } from "./plugins/pluginStyles";
+import {
+  primaryServerConfigAtom,
+  primaryServerEnvironmentPluginsAtom,
+  primaryServerSettingsAtom,
+} from "./state/server";
 import { environmentShell } from "./state/shell";
 import { installChatRouteCommands } from "./shortcuts/chatRouteCommands";
 import { startWorkspaceFocus } from "./lib/workspaceFocus";
@@ -118,6 +124,21 @@ function startDocumentTitle(): void {
   );
 }
 
+const pluginDocumentStylesAtom = Atom.make((get) =>
+  resolvePluginDocumentStyles(
+    get(primaryServerEnvironmentPluginsAtom),
+    get(primaryServerSettingsAtom).plugins,
+  ),
+).pipe(Atom.withLabel("web-plugin-document-styles"));
+
+function startPluginStyles(): void {
+  appAtomRegistry.subscribe(
+    pluginDocumentStylesAtom,
+    (styles) => applyPluginDocumentStyles(styles),
+    { immediate: true },
+  );
+}
+
 /**
  * Each route paints its own surface, which the browser chrome samples once it is on screen.
  * onRendered only fires for a new href; onResolved also covers `router.invalidate()`, which
@@ -168,6 +189,7 @@ export function startAppServices(): AppRouter {
   startClientAppearance();
   startDocumentTitle();
   startEnvironmentThemeRepaint();
+  startPluginStyles();
   startBrowserChromeThemeSync(router);
   startDefaultThemeAdoption();
   startModelPreferencesMigration();

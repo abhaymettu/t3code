@@ -643,7 +643,7 @@ describe("server state projection", () => {
     ).toBe(true);
   });
 
-  it("keeps published themes across a reconnect snapshot", () => {
+  it("keeps published themes and plugins across a reconnect snapshot", () => {
     const themes = [
       {
         id: "nightfall",
@@ -653,12 +653,24 @@ describe("server state projection", () => {
         accent: "#7aa2f7",
       },
     ] as const;
+    const plugins = {
+      plugins: [{ id: "dev.example.glass", name: "Glass", version: "1.0.0", settings: [] }],
+      problems: [{ directory: "broken", message: "t3-plugin.json is missing." }],
+    };
 
     const withThemes = applyServerConfigProjection(
-      applyServerConfigProjection(Option.none(), { version: 1, type: "snapshot", config: CONFIG }),
-      { version: 1, type: "environmentThemesUpdated", payload: { themes } },
+      applyServerConfigProjection(
+        applyServerConfigProjection(Option.none(), {
+          version: 1,
+          type: "snapshot",
+          config: CONFIG,
+        }),
+        { version: 1, type: "environmentThemesUpdated", payload: { themes } },
+      ),
+      { version: 1, type: "environmentPluginsUpdated", payload: plugins },
     );
     expect(Option.getOrThrow(withThemes).config.environmentThemes).toEqual(themes);
+    expect(Option.getOrThrow(withThemes).config.environmentPlugins).toEqual(plugins);
 
     const afterReconnect = applyServerConfigProjection(withThemes, {
       version: 1,
@@ -666,6 +678,7 @@ describe("server state projection", () => {
       config: CONFIG,
     });
     expect(Option.getOrThrow(afterReconnect).config.environmentThemes).toEqual(themes);
+    expect(Option.getOrThrow(afterReconnect).config.environmentPlugins).toEqual(plugins);
   });
 
   it("keeps a current welcome on ready and rejects a buffered welcome from the old session", () => {

@@ -504,17 +504,19 @@ describe("RpcSessionFactory", () => {
     ),
   );
 
-  it.effect("replays theme updates and deletion as authoritative events", () =>
+  it.effect("replays theme and plugin updates and deletion as authoritative events", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const { factory, sockets } = yield* makeFactory({ environmentThemes: true });
+        const { factory, sockets } = yield* makeFactory({
+          environmentThemes: true,
+          environmentPlugins: true,
+        });
         const session = yield* factory.connect(PREPARED);
         const readyFiber = yield* Effect.forkChild(session.ready);
         const socket = yield* awaitSocket(sockets);
         socket.open();
-        yield* completeInitialConfig(socket, ENCODED_THEME_SERVER_CONFIG, {
-          environmentThemes: true,
-        });
+        const input = { environmentThemes: true, environmentPlugins: true };
+        yield* completeInitialConfig(socket, ENCODED_THEME_SERVER_CONFIG, input);
         yield* Fiber.join(readyFiber);
 
         const firstThemes = [
@@ -535,12 +537,16 @@ describe("RpcSessionFactory", () => {
             accent: "#ffffff",
           },
         ];
+        const plugins = {
+          plugins: [{ id: "dev.example.glass", name: "Glass", version: "1.0.0", settings: [] }],
+          problems: [],
+        };
         const subscriberStarted = yield* Deferred.make<void>();
-        const subscriber = yield* session.subscribeServerConfig({ environmentThemes: true }).pipe(
+        const subscriber = yield* session.subscribeServerConfig(input).pipe(
           Stream.mapEffect((event) =>
             Deferred.succeed(subscriberStarted, undefined).pipe(Effect.as(event)),
           ),
-          Stream.take(4),
+          Stream.take(5),
           Stream.runCollect,
           Effect.forkChild,
         );
@@ -561,6 +567,7 @@ describe("RpcSessionFactory", () => {
             type: "environmentThemesUpdated",
             payload: { themes: [] },
           },
+          { version: 1, type: "environmentPluginsUpdated", payload: plugins },
         ]);
 
         const liveEvents = Array.from(yield* Fiber.join(subscriber));
@@ -569,16 +576,20 @@ describe("RpcSessionFactory", () => {
           "environmentThemesUpdated",
           "environmentThemesUpdated",
           "environmentThemesUpdated",
+          "environmentPluginsUpdated",
         ]);
         expect(liveEvents[2]).toMatchObject({ payload: { themes: replacementThemes } });
 
         const replay = Array.from(
-          yield* session
-            .subscribeServerConfig({ environmentThemes: true })
-            .pipe(Stream.take(2), Stream.runCollect),
+          yield* session.subscribeServerConfig(input).pipe(Stream.take(3), Stream.runCollect),
         );
-        expect(replay.map((event) => event.type)).toEqual(["snapshot", "environmentThemesUpdated"]);
+        expect(replay.map((event) => event.type)).toEqual([
+          "snapshot",
+          "environmentThemesUpdated",
+          "environmentPluginsUpdated",
+        ]);
         expect(replay[1]).toMatchObject({ payload: { themes: [] } });
+        expect(replay[2]).toMatchObject({ payload: plugins });
 
         let projection = applyServerConfigProjection(Option.none(), {
           version: 1,

@@ -2,8 +2,16 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "../../lib/utils";
 
+export type ThreadDetailsSectionName =
+  | "workspace"
+  | "version-control"
+  | "servers"
+  | "automations"
+  | "lineage";
+
+/** `data-thread-details-section` is a stable anchor for plugin stylesheets. */
 export function ThreadDetailsSection({
-  headingId,
+  section,
   title,
   actions,
   separated = true,
@@ -11,15 +19,17 @@ export function ThreadDetailsSection({
   children,
   ...props
 }: Omit<ComponentProps<"section">, "className" | "style" | "title" | "aria-labelledby"> & {
-  headingId: string;
+  section: ThreadDetailsSectionName;
   title: string;
   actions?: ReactNode;
   separated?: boolean;
   showHeading?: boolean;
 }) {
+  const headingId = `thread-details-${section}-heading`;
   return (
     <section
       {...props}
+      data-thread-details-section={section}
       aria-labelledby={showHeading ? headingId : undefined}
       aria-label={showHeading ? undefined : title}
       className={cn("px-2 pt-2 pb-2.5", separated && "border-t border-border/65")}

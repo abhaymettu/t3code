@@ -484,7 +484,7 @@ export function ThreadRelationshipsPanel(props: {
 
   return (
     <ThreadDetailsSection
-      headingId="thread-details-lineage-heading"
+      section="lineage"
       title={runningCount > 0 ? `Lineage · ${runningCount} running` : "Lineage"}
       // A lone "Previous agents" row names itself; the heading returns for status or actions.
       showHeading={runningCount > 0 || canDetach || related.length > 0 || active.length > 0}

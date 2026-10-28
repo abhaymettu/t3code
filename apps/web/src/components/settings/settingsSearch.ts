@@ -20,6 +20,7 @@ export type SettingsPath =
   | "/settings/general"
   | "/settings/diagnostics"
   | "/settings/appearance"
+  | "/settings/plugins"
   | "/settings/chat"
   | "/settings/diffs"
   | "/settings/keybindings"
@@ -88,6 +89,7 @@ export const SETTINGS_SECTION_LABELS: Readonly<Record<SettingsPath, string>> = {
   "/settings/projects": "Projects",
   "/settings/general": "General",
   "/settings/appearance": "Appearance",
+  "/settings/plugins": "Plugins",
   "/settings/chat": "Chat",
   "/settings/diffs": "Diffs & pull requests",
   "/settings/keybindings": "Keybindings",
@@ -117,6 +119,7 @@ export const SETTINGS_NAV_GROUPS: ReadonlyArray<{
     paths: [
       "/settings/general",
       "/settings/appearance",
+      "/settings/plugins",
       "/settings/chat",
       "/settings/diffs",
       "/settings/keybindings",
@@ -195,6 +198,22 @@ export function sourceControlHostSearchItems(
       },
     ];
   });
+}
+
+export function pluginSettingsSearchId(pluginId: string) {
+  return `plugin-${pluginId}` as const;
+}
+
+/** Installed plugins come from the environment, so search finds each one by name at runtime. */
+export function pluginSearchItems(
+  plugins: ReadonlyArray<{ readonly id: string; readonly name: string }>,
+): ReadonlyArray<SettingsSearchItem> {
+  return plugins.map((plugin) => ({
+    id: pluginSettingsSearchId(plugin.id),
+    title: plugin.name,
+    to: "/settings/plugins",
+    searchTerms: [`${plugin.id} plugin`],
+  }));
 }
 
 /** For settings that apply to every host. */
@@ -380,6 +399,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "composer-context",
     title: "Composer context",
     to: "/settings/appearance",
+  },
+  {
+    id: "plugins",
+    title: "Plugins",
+    to: "/settings/plugins",
+    searchTerms: ["styles css themes customize t3-plugin.json extensions"],
   },
   {
     id: "project-grouping",
@@ -1136,6 +1161,7 @@ const SETTINGS_CATEGORY_SCOPES: Readonly<Record<SettingsPath, SettingsSearchScop
   "/settings/projects": "project",
   "/settings/general": null,
   "/settings/appearance": null,
+  "/settings/plugins": null,
   "/settings/chat": null,
   "/settings/diffs": null,
   "/settings/snap-shot": null,

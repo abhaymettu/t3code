@@ -126,7 +126,7 @@ export function ThreadAutomationsPanel(props: {
 
   return (
     <ThreadDetailsSection
-      headingId="thread-details-automations-heading"
+      section="automations"
       title="Automations"
       data-thread-automations-panel
       actions={
