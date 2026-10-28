@@ -1,0 +1,60 @@
+/* Rules start with the plugin's root attribute so they apply only while it is on and outrank theme rules.
+   People who asked their system for solid surfaces keep the stock look. */
+@media not ((prefers-reduced-transparency: reduce) or (prefers-contrast: more)) {
+  :root[data-plugin-example_backdrop] {
+    --backdrop-veil: color-mix(
+      in srgb,
+      var(--background) var(--plugin-example_backdrop--fade, 72%),
+      transparent
+    );
+  }
+
+  /* The picture sits in the body's own stacking context, so it paints above the body's background. */
+  :root[data-plugin-example_backdrop] body {
+    isolation: isolate;
+  }
+
+  :root[data-plugin-example_backdrop] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      linear-gradient(var(--backdrop-veil), var(--backdrop-veil)),
+      url("./backdrop.webp") center / cover no-repeat,
+      var(--background);
+  }
+
+  :root[data-plugin-example_backdrop--focus="top"] body::before {
+    background-position: top;
+  }
+
+  :root[data-plugin-example_backdrop--focus="bottom"] body::before {
+    background-position: bottom;
+  }
+
+  :root[data-plugin-example_backdrop]
+    :is(
+      [data-slot="sidebar-inset"],
+      [data-chat-layout],
+      [data-workspace-area="conversation"],
+      [data-chat-header]
+    ) {
+    background-color: transparent;
+    background-image: none;
+  }
+
+  :root[data-plugin-example_backdrop--sidebar="true"] [data-slot="sidebar-inner"] {
+    background-color: transparent;
+    background-image: none;
+  }
+
+  /* Floating surfaces get a solid card instead of frosted glass over the picture. */
+  :root[data-plugin-example_backdrop] [data-slot="composer-shell"]::before,
+  :root[data-plugin-example_backdrop] [data-thread-details-card] {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: color-mix(in srgb, var(--card) 94%, transparent);
+  }
+}

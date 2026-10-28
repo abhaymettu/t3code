@@ -1,0 +1,43 @@
+{
+  "manifestVersion": 1,
+  "id": "example.backdrop",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "name": "Backdrop",
+  "description": "A picture behind the whole window. Replace backdrop.webp with your own image.",
+  "contributes": {
+    "styles": ["./backdrop.css"],
+    "settings": [
+      {
+        "type": "range",
+        "key": "fade",
+        "title": "Fade",
+        "description": "How much of the theme's background covers the picture. Higher keeps text easier to read.",
+        "min": 30,
+        "max": 95,
+        "step": 1,
+        "unit": "%",
+        "default": 72
+      },
+      {
+        "type": "boolean",
+        "key": "sidebar",
+        "title": "Behind the sidebar",
+        "description": "Show the picture behind the sidebar too, not only behind the chat.",
+        "default": true
+      },
+      {
+        "type": "select",
+        "key": "focus",
+        "title": "Keep in view",
+        "description": "Which part of the picture stays visible when the window is a different shape.",
+        "options": [
+          { "value": "center", "label": "Center" },
+          { "value": "top", "label": "Top" },
+          { "value": "bottom", "label": "Bottom" }
+        ],
+        "default": "center"
+      }
+    ]
+  }
+}

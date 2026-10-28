@@ -1,0 +1,10 @@
+:root[data-plugin-example_thread-details--workspace="false"]
+  [data-thread-details-section="workspace"],
+:root[data-plugin-example_thread-details--version-control="false"]
+  [data-thread-details-section="version-control"],
+:root[data-plugin-example_thread-details--servers="false"] [data-thread-details-section="servers"],
+:root[data-plugin-example_thread-details--automations="false"]
+  [data-thread-details-section="automations"],
+:root[data-plugin-example_thread-details--lineage="false"] [data-thread-details-section="lineage"] {
+  display: none;
+}

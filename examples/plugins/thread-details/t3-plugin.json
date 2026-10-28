@@ -1,0 +1,18 @@
+{
+  "manifestVersion": 1,
+  "id": "example.thread-details",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "name": "Thread details sections",
+  "description": "Choose which sections the thread details panel shows.",
+  "contributes": {
+    "styles": ["./thread-details.css"],
+    "settings": [
+      { "type": "boolean", "key": "workspace", "title": "Workspace", "default": true },
+      { "type": "boolean", "key": "version-control", "title": "Version control", "default": true },
+      { "type": "boolean", "key": "servers", "title": "Servers", "default": true },
+      { "type": "boolean", "key": "automations", "title": "Automations", "default": true },
+      { "type": "boolean", "key": "lineage", "title": "Lineage", "default": true }
+    ]
+  }
+}
