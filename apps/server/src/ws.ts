@@ -109,6 +109,7 @@ import { RpcGroup, RpcSerialization, RpcServer } from "effect/rpc";
 
 import * as CheckpointDiffQuery from "./checkpointing/CheckpointDiffQuery.ts";
 import * as ServerConfig from "./config.ts";
+import * as EnvironmentPlugins from "./environmentPlugins.ts";
 import * as EnvironmentTheme from "./environmentTheme.ts";
 import * as Keybindings from "./keybindings.ts";
 import * as ExternalLauncher from "./process/externalLauncher.ts";
@@ -1305,6 +1306,7 @@ export const layerWsRpc = (
       const checkpointDiffQuery = yield* CheckpointDiffQuery.CheckpointDiffQuery;
       const keybindings = yield* Keybindings.Keybindings;
       const environmentTheme = yield* EnvironmentTheme.EnvironmentThemeService;
+      const environmentPlugins = yield* EnvironmentPlugins.EnvironmentPluginService;
       const externalLauncher = yield* ExternalLauncher.ExternalLauncher;
       const remoteOpenTargets = yield* RemoteOpenTargets.RemoteOpenTargets;
       const directEndpoints = yield* DirectEndpoints.DirectEndpoints;
@@ -3133,6 +3135,16 @@ export const layerWsRpc = (
                       })),
                     )
                   : Stream.empty;
+              const environmentPluginUpdates =
+                input.environmentPlugins === true
+                  ? environmentPlugins.streamChanges.pipe(
+                      Stream.map((plugins) => ({
+                        version: 1 as const,
+                        type: "environmentPluginsUpdated" as const,
+                        payload: plugins,
+                      })),
+                    )
+                  : Stream.empty;
               const usageLimitSourceUpdates =
                 input.usageLimitSources === true
                   ? usageLimitSources.streamChanges.pipe(
@@ -3152,15 +3164,16 @@ export const layerWsRpc = (
                 })),
               );
 
-              const liveUpdates = Stream.merge(
-                keybindingsUpdates,
-                Stream.merge(
+              const liveUpdates = Stream.mergeAll<ServerConfigStreamEvent, never, never>(
+                [
+                  keybindingsUpdates,
                   providerStatuses,
-                  Stream.merge(
-                    settingsUpdates,
-                    Stream.merge(environmentThemeUpdates, usageLimitSourceUpdates),
-                  ),
-                ),
+                  settingsUpdates,
+                  environmentThemeUpdates,
+                  environmentPluginUpdates,
+                  usageLimitSourceUpdates,
+                ],
+                { concurrency: "unbounded" },
               );
 
               return Stream.concat(
