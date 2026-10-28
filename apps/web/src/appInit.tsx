@@ -8,6 +8,11 @@ import { startElectronBrowserHost } from "./browser/ElectronBrowserHost";
 import { startBrowserProfileReporting } from "./browser/BrowserProfileReporter";
 import { startPreviewTitleRecording } from "./browserHistoryStore";
 import { retainThreadOverlaysForThread } from "./components/chat/threadOverlayRetention";
+import {
+  showBackgroundImage,
+  shownBackgroundImageAssetId,
+  subscribeStoredBackgroundImage,
+} from "./assets/backgroundImageStore";
 import { startBackgroundThreadAnnouncements } from "./components/BackgroundThreadAnnouncer";
 import { startSshPasswordPromptQueue } from "./components/desktop/SshPasswordPromptDialog";
 import { startHostFreezeToasts } from "./components/HostFreezeToastCoordinator";
@@ -57,6 +62,14 @@ import { resolveThreadRouteTarget } from "./threadRoutes";
 /** Writes appearance settings onto the document, touching only the groups that changed. */
 function startClientAppearance(): void {
   const root = document.documentElement;
+  const solidSurfaces = window.matchMedia(
+    "(prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active)",
+  );
+  const applyBackgroundImage = () =>
+    showBackgroundImage(
+      root,
+      solidSurfaces.matches ? null : shownBackgroundImageAssetId(getClientSettings()),
+    );
   let applied: ClientSettings | null = null;
   const apply = () => {
     const settings = getClientSettings();
@@ -70,6 +83,14 @@ function startClientAppearance(): void {
     }
     if (previous?.appearanceContrast !== settings.appearanceContrast) {
       applyAppearanceContrast(root, settings.appearanceContrast);
+    }
+    if (
+      previous?.backgroundImageEnabled !== settings.backgroundImageEnabled ||
+      previous.backgroundImageAssetId !== settings.backgroundImageAssetId ||
+      previous.backgroundImageFade !== settings.backgroundImageFade
+    ) {
+      root.style.setProperty("--background-image-fade", `${settings.backgroundImageFade / 100}`);
+      applyBackgroundImage();
     }
     if (previous?.glassOpacity !== settings.glassOpacity) {
       root.style.setProperty("--glass-opacity", `${settings.glassOpacity}%`);
@@ -100,6 +121,8 @@ function startClientAppearance(): void {
     }
   };
   subscribeClientSettings(apply);
+  subscribeStoredBackgroundImage(applyBackgroundImage);
+  solidSurfaces.addEventListener("change", applyBackgroundImage);
   apply();
 }
 

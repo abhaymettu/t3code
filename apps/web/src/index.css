@@ -1597,7 +1597,8 @@ html[data-theme-id="t3-chat"] [data-app-sidebar] {
 
 /* Recompute contrast wherever a subtree owns its own semantic color palette. */
 :root,
-[data-app-sidebar] {
+[data-app-sidebar],
+:root[data-background-image] :is([data-slot="sidebar-inset"], [data-app-modal]) {
   --contrast-toolbar-foreground: color-mix(
     in oklab,
     color-mix(
@@ -2566,6 +2567,99 @@ code {
       );
     }
   }
+}
+
+:root[data-background-image] {
+  --background-image-veil: calc(var(--background-image-fade) * 100%);
+  --background-image-veil-top: var(--background-image-veil);
+  --background-image-wash: linear-gradient(
+    color-mix(in srgb, var(--background) var(--background-image-veil-top), transparent),
+    color-mix(in srgb, var(--background) var(--background-image-veil), transparent) 60%
+  );
+  --surface-grain: none;
+}
+:root.dark[data-background-image] {
+  --background-image-veil-top: min(100%, var(--background-image-veil) * 1.25);
+}
+
+/* Solid glass over the photo, so scrolled text never ghosts through the composer or menus. */
+[data-background-image] body {
+  isolation: isolate;
+  --glass-opacity: 100%;
+  --glass-blur: 0px;
+  --glass-saturation: 1;
+}
+[data-background-image] :is(body, [data-app-modal])::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    var(--background-image-wash),
+    var(--background-image) center / cover no-repeat,
+    var(--background);
+}
+/* Lines the photo up with the window by hand: iOS Safari ignores background-attachment: fixed. */
+[data-background-image] [data-app-modal] {
+  isolation: isolate;
+
+  &::before {
+    position: absolute;
+    inset: auto;
+    top: calc(50% - 50dvh);
+    left: calc(50% - 50vw);
+    width: 100vw;
+    height: 100dvh;
+  }
+}
+
+[data-background-image]
+  :is(
+    [data-slot="sidebar-inner"],
+    [data-slot="sidebar-inset"],
+    [data-slot="sidebar-inset"] > *,
+    [data-chat-header],
+    [data-workspace-area="conversation"],
+    [data-workspace-area="settings-nav"],
+    [data-timeline-loading]
+  ) {
+  background-color: transparent;
+}
+[data-background-image] [data-slot="dialog-backdrop"] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+[data-background-image] .chat-markdown-codeblock {
+  background-color: var(--code-background);
+}
+[data-background-image] [data-app-modal] [data-slot="settings-group"][data-variant="grouped"] {
+  background-color: color-mix(in oklab, var(--card) 92%, transparent);
+}
+[data-background-image]
+  :is([data-app-sidebar], [data-slot="sidebar-inset"], [data-app-modal])
+  [data-slot="switch"][data-unchecked] {
+  background-color: color-mix(in srgb, var(--foreground) 50%, var(--card));
+}
+
+:root[data-background-image]
+  :is([data-app-sidebar], [data-slot="sidebar-inset"], [data-app-modal]) {
+  --muted-foreground: color-mix(in oklab, var(--foreground) 87%, var(--background));
+  --sidebar-muted-foreground: var(--muted-foreground);
+  --sidebar-icon-color: var(--contrast-sidebar-muted-foreground);
+  --secondary-label: var(--muted-foreground);
+  --icon-muted: var(--muted-foreground);
+  --info-foreground: oklch(from var(--info) min(l, 0.33) c h);
+  --success-foreground: oklch(from var(--success) min(l, 0.33) c h);
+  --warning-foreground: oklch(from var(--warning) min(l, 0.33) c h);
+  --error-foreground: oklch(from var(--error) min(l, 0.33) c h);
+}
+:root.dark[data-background-image]
+  :is([data-app-sidebar], [data-slot="sidebar-inset"], [data-app-modal]) {
+  --info-foreground: oklch(from var(--info) max(l, 0.85) min(c, 0.1) h);
+  --success-foreground: oklch(from var(--success) max(l, 0.85) min(c, 0.1) h);
+  --warning-foreground: oklch(from var(--warning) max(l, 0.85) min(c, 0.1) h);
+  --error-foreground: oklch(from var(--error) max(l, 0.85) min(c, 0.1) h);
 }
 
 /* A workspace area with no control of its own takes F6 focus itself; keep that visible. */

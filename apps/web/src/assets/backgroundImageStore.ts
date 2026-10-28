@@ -1,4 +1,8 @@
-import { BackgroundImageAssetId } from "@t3tools/contracts/settings";
+import {
+  BackgroundImageAssetId,
+  type ClientSettings,
+  MAX_BACKGROUND_IMAGE_FADE,
+} from "@t3tools/contracts/settings";
 import * as Schema from "effect/Schema";
 import { useEffect, useSyncExternalStore } from "react";
 
@@ -281,4 +285,27 @@ export function useStoredBackgroundImage(
     if (assetId !== null) loadStoredBackgroundImage(assetId);
   }, [assetId]);
   return image;
+}
+
+export function shownBackgroundImageAssetId(
+  settings: Pick<
+    ClientSettings,
+    "backgroundImageEnabled" | "backgroundImageAssetId" | "backgroundImageFade"
+  >,
+): BackgroundImageAssetId | null {
+  return settings.backgroundImageEnabled && settings.backgroundImageFade < MAX_BACKGROUND_IMAGE_FADE
+    ? settings.backgroundImageAssetId
+    : null;
+}
+
+export function showBackgroundImage(root: HTMLElement, assetId: BackgroundImageAssetId | null) {
+  if (assetId !== null) loadStoredBackgroundImage(assetId);
+  const image = getStoredBackgroundImage(assetId);
+  if (image.status === "loading") return;
+  if (image.status === "ready") {
+    root.style.setProperty("--background-image", `url("${image.url}")`);
+  } else {
+    root.style.removeProperty("--background-image");
+  }
+  root.toggleAttribute("data-background-image", image.status === "ready");
 }
